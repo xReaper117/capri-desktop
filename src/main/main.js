@@ -1017,6 +1017,45 @@ function applyRender() {
   if (DEV) app.whenReady().then(() => setTimeout(() => console.log('[capri] display:', render, JSON.stringify(app.getGPUFeatureStatus())), 4000));
 }
 
+// Her intro again when you come back to your PC (renderer: the 'introBack' command):
+//  - after `introIdleMin` minutes without touching the keyboard or the mouse (system-wide idle time,
+//    so it also covers sleep, and typing in other apps counts as being there);
+//  - when you unlock Windows.
+// Both can fire for one return (typing your PIN is input too), so only one plays: a lock screen in
+// the way holds the idle one back (it'd play behind it), and a cooldown covers the rest.
+const INTRO_POLL_MS = 2000;
+const INTRO_SETTLE_MS = 1500; // Windows is still putting the desktop back right after an unlock or a wake
+const INTRO_COOLDOWN_MS = 30000;
+function watchReturn() {
+  let lastIntro = -Infinity;
+  let lockedAt = null; // when the screen locked (null: not locked)
+  const play = (reason, away) => {
+    const now = Date.now();
+    if (now - lastIntro < INTRO_COOLDOWN_MS || !config.load().visible) return; // put away: she stays in her biochip
+    lastIntro = now;
+    setTimeout(() => sendCommand('introBack', { reason, away }), INTRO_SETTLE_MS); // away: how long you were gone, ms
+  };
+  const idleMs = () => config.load().introIdleMin * 60 * 1000;
+  let lastInput = Date.now() - powerMonitor.getSystemIdleTime() * 1000; // when you last touched something
+  setInterval(() => {
+    const input = Date.now() - powerMonitor.getSystemIdleTime() * 1000;
+    if (input <= lastInput) return;
+    const gap = input - lastInput; // you were gone this long, and just touched something
+    lastInput = input;
+    if (lockedAt === null && gap >= idleMs() && config.load().introOnReturn) play('return', gap);
+  }, INTRO_POLL_MS);
+  powerMonitor.on('lock-screen', () => {
+    lockedAt = Date.now();
+  });
+  powerMonitor.on('unlock-screen', () => {
+    const cfg = config.load();
+    const away = lockedAt === null ? 0 : Date.now() - lockedAt;
+    lockedAt = null;
+    // with the unlock one off, a long enough absence behind the lock screen still counts as coming back
+    if (cfg.introOnUnlock || (cfg.introOnReturn && away >= idleMs())) play('unlock', away);
+  });
+}
+
 function main() {
   applyRender();
   if (!app.requestSingleInstanceLock()) {
@@ -1064,6 +1103,7 @@ function main() {
     // after sleep or a locked screen, once Windows has settled
     powerMonitor.on('resume', () => setTimeout(rearmOverlay, 2000));
     powerMonitor.on('unlock-screen', () => setTimeout(rearmOverlay, 1000));
+    watchReturn();
   });
 
   app.on('will-quit', () => {

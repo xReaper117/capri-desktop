@@ -38,6 +38,9 @@ const DEFAULTS = {
   pcReact: true,     // she reacts to your PC: the processor at full tilt, the battery, the network, a USB stick, a game (pc.js)
   watchScreen: false, // she looks at your screen now and then and says something about it (look.js)
   lookAsked: false,  // she told you what looking means (where the picture goes) and you said yes
+  introOnReturn: true, // her intro plays when you're back after `introIdleMin` minutes without touching the keyboard or mouse
+  introIdleMin: 5,   // how long you must be away (keyboard and mouse idle) for that
+  introOnUnlock: true, // her intro plays when you unlock Windows (main.js watchReturn)
 };
 
 let cache = null;

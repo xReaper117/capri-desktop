@@ -1575,6 +1575,18 @@ export class Capri {
   // `still`: no motion, it comes and goes where it is (Windows' animations off).
   async intro(at, { label = 'hi', caption = 'PROJECT CAPRICORN', still = reducedMotion.matches } = {}) {
     const p = this.p;
+    // Played again while she's up and about (you're back at your PC, app.js 'introBack'): whatever
+    // she was doing ends, and asleep down to her mask, the intro is how she comes back.
+    this.endAct(false);
+    if (this.dormant) {
+      this.dormant = false;
+      this.dozedOn = null;
+      this.onDoze?.('end');
+      this.hidden = false;
+      this.root.hidden = false;
+    }
+    if (this.mode === 'sleep') this.setMode('idle');
+    this.lastActivity = performance.now();
     this.pos = { ...at };
     this.faceCenter();
     this.setStance('stand');

@@ -14,7 +14,7 @@ import { Reminders, clock } from './reminders.js';
 import { Look } from './look.js';
 import { Pc } from './pc.js';
 import { linesFor } from './lines.js';
-import { pick, fmt, reducedMotion } from './util.js';
+import { pick, fmt, sleep, reducedMotion } from './util.js';
 
 const host = window.host;
 
@@ -138,6 +138,9 @@ async function boot() {
   };
   let lastMove = performance.now();
   let onBack = null; // (away ms) => you're back at your PC after a while (the bond, below)
+  // her intro when you're back (main.js watchReturn): then it's her welcome, not the bond's below
+  let introOnReturn = config.introOnReturn !== false;
+  let introIdleMin = config.introIdleMin ?? 5;
   window.addEventListener('mousemove', (e) => {
     const now = performance.now();
     if (now - lastMove > AWAY_MS) onBack?.(now - lastMove);
@@ -346,7 +349,7 @@ async function boot() {
     if (performance.now() - lastMove < 10 * 60 * 1000 && !capri.stowed) bond.add('time', 1);
   }, 10 * 60 * 1000);
   // back at your PC after a while: once she's attached to you, she's glad to see you
-  onBack = () => {
+  const welcomeBack = () => {
     if (bond.stage < 2 || capri.stowed) return;
     capri.wake();
     setTimeout(() => {
@@ -354,6 +357,11 @@ async function boot() {
       capri.perform('hop');
       panel.say({ kind: 'idle', face: 'look', line: pick(brain.t.bond.back), hold: 3500 });
     }, 700);
+  };
+  // her intro plays for a return this long (the 'introBack' command, below) and she welcomes you after it
+  onBack = (away) => {
+    if (introOnReturn && away >= introIdleMin * 60 * 1000) return;
+    welcomeBack();
   };
 
   // A reminder due: she comes and finds you (on whichever screen you're on), and holds it up until
@@ -614,6 +622,8 @@ async function boot() {
       panel.setTicker(null);
       if (capri.mode === 'work' || capri.mode === 'alert') capri.setMode('idle');
     }
+    introOnReturn = cfg.introOnReturn !== false;
+    introIdleMin = cfg.introIdleMin ?? 5;
     brain.watching = cfg.claude !== false;
     brain.custom = mine(cfg);
     brain.assistant = cfg.assistant;
@@ -737,6 +747,17 @@ async function boot() {
         if (cmd.ok) panel.say({ kind: 'info', line: cmd.action === 'install' ? t.hooksOk : t.hooksRemoved, hold: 6000 });
         else panel.say({ kind: 'error', line: fmt(t.hooksFail, { error: cmd.error }), hold: 9000 });
         break;
+      case 'introBack': { // you're back at your PC (main.js watchReturn: idle a while, or Windows unlocked)
+        // in the middle of a move or being held: a moment to finish, else let it go
+        for (let i = 0; i < 20 && (capri.busy || capri.dragging); i++) await sleep(250);
+        if (capri.stowed || capri.busy || capri.dragging || guide.running || chat.open) break;
+        // something to tell you is up (Claude's answer, an alert, a reminder): it's what you came back for
+        if (panel.visible && !['info', 'idle'].includes(panel.current?.kind)) break;
+        panel.hide();
+        await capri.intro(capri.spot('post'));
+        if (cmd.away >= AWAY_MS) welcomeBack(); // away a long while: the bond's welcome too, after it
+        break;
+      }
       // --dev helpers
       case 'intro': // her intro again, as when she starts (still: as with Windows' animations off)
         panel.hide();
