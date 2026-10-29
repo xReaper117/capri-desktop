@@ -425,6 +425,14 @@ function rebuildTray() {
       },
     },
     {
+      // a look every 30 s and a tip (look.js); she asks first, the first time, like the one above
+      label: t.coach, type: 'checkbox', checked: Boolean(cfg.coach), accelerator: 'Ctrl+Alt+G',
+      click: (item) => {
+        sendCommand('coach', { on: item.checked });
+        rebuildTray(); // as it is until she's asked
+      },
+    },
+    {
       label: t.rest,
       submenu: [['corner', t.restCorner], ['taskbar', t.restTaskbar]].map(([rest, label]) => ({
         label, type: 'radio', checked: cfg.rest === rest, click: () => updateConfig({ rest }),
@@ -602,14 +610,22 @@ async function chatWithFallback(cfg, messages, send, signal, streamed) {
 // She looks at your screen (look.js): a picture of the screen she's on, kept here in memory a moment
 // for her AI to look at, never written anywhere. 1280 px wide at most: enough to read, light to send.
 const snaps = new Map(); // id -> the picture, base64 JPEG
-async function snapScreen() {
+// `maxWidth`: her coach (look.js) asks for more, to read a game's HUD. `checkBlack`: nothing but black
+// is what a game in exclusive fullscreen gives (it hides from screen capture), or a locked screen.
+async function snapScreen(maxWidth = 1280, { checkBlack = false } = {}) {
   const d = targetDisplay();
   const k = d.scaleFactor || 1;
-  const fit = Math.min(1, 1280 / (d.bounds.width * k));
+  const fit = Math.min(1, maxWidth / (d.bounds.width * k));
   const size = { width: Math.round(d.bounds.width * k * fit), height: Math.round(d.bounds.height * k * fit) };
   const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: size });
   const src = sources.find((s) => s.display_id === String(d.id)) || sources[0];
   if (!src || src.thumbnail.isEmpty()) throw new Error('no picture of the screen');
+  if (checkBlack) {
+    const px = src.thumbnail.toBitmap(); // BGRA: one pixel in every 211 is enough to tell
+    let lit = false;
+    for (let i = 0; i + 2 < px.length && !lit; i += 4 * 211) lit = px[i] > 12 || px[i + 1] > 12 || px[i + 2] > 12;
+    if (!lit) throw Object.assign(new Error('the screen is all black'), { code: 'black' });
+  }
   return src.thumbnail.toJPEG(72).toString('base64');
 }
 
@@ -746,16 +762,18 @@ function registerIpc() {
   });
   ipcMain.on('chat:stop', (_e, id) => chats.get(id)?.abort());
   // she looks at your screen (look.js): the picture first, then what her AI says about it
-  ipcMain.handle('look:snap', async () => {
+  ipcMain.handle('look:snap', async (_e, opts) => {
     try {
       const id = randomUUID();
-      snaps.set(id, await snapScreen());
+      snaps.set(id, opts?.coach ? await snapScreen(1920, { checkBlack: true }) : await snapScreen());
       setTimeout(() => snaps.delete(id), 120000);
       return { ok: true, id };
     } catch (err) {
-      return { ok: false, error: err.message };
+      return { ok: false, error: err.message, code: err.code || null };
     }
   });
+  // seconds since you last touched the keyboard or the mouse (her coach pauses while you're away)
+  ipcMain.handle('pc:idle', () => powerMonitor.getSystemIdleTime());
   ipcMain.handle('look:say', (_e, request) => sayAboutSnap(request || {}));
   // how hard the processor works, in %, since the last time she asked (pc.js)
   let cpuBefore = null;
@@ -1087,6 +1105,8 @@ function main() {
       onDebug: DEV ? debugHandler : null,
     });
     globalShortcut.register('Control+Alt+C', () => toggleVisible());
+    globalShortcut.register('Control+Alt+G', () => sendCommand('coach', { on: !config.load().coach })); // her coach, on or off, from inside a game
+    if (config.load().coach) config.save({ coach: false }); // screenshots never start by themselves with the app
     llm.restoreClaude(readMemory().claude);
     refreshModels(); // for her menu's model list
     setTimeout(() => launch.launchables().catch(() => {}), 20000); // what she can open, before you ask

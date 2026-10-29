@@ -666,6 +666,9 @@ async function boot() {
       case 'watchScreen': // "Look at my screen now and then" in her menu
         look.setAuto(cmd.on);
         break;
+      case 'coach': // "Game coach" in her menu, or Ctrl+Alt+G
+        look.setCoach(cmd.on);
+        break;
       case 'goScreen': // a screen picked in her menu: she goes there
         goToScreen(cmd.id);
         break;

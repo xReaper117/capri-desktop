@@ -307,6 +307,11 @@ export const LINES = {
       noVision: '{model} ne sait pas lire les images. gemma3 sait, sur ton PC, comme Gemini en ligne : change dans mon menu › Modèle IA.',
       noAI: 'Il me faut une IA pour regarder : clic droit sur moi › Modèle IA.',
       failed: 'Je n’ai pas réussi à regarder : {error}',
+      coachNote: 'Une image toutes les {sec} secondes tant que le coach est actif, jusqu’à ce que tu l’arrêtes (Ctrl+Alt+G, ou mon menu).',
+      coachOn: 'Coach activé. Je regarde toutes les {sec} secondes et je te dis ce que je ferais. Ctrl+Alt+G m’arrête.',
+      coachOff: 'Coach arrêté. Bonne partie.',
+      coachBlack: 'Je ne vois que du noir. Un jeu en plein écran exclusif se cache de la capture d’écran : passe-le en fenêtré ou en plein écran fenêtré et je verrai.',
+      coachStopped: 'Coach arrêté : {error}',
     },
     // les rappels (reminders.js) : « rappelle-moi dans 20 min de sortir le linge »
     remind: {
@@ -657,6 +662,11 @@ export const LINES = {
       noVision: '{model} can’t read pictures. gemma3 can, on your PC, and so can Gemini online: switch in my menu › AI model.',
       noAI: 'I need an AI to look: right-click me › AI model.',
       failed: 'I couldn’t look: {error}',
+      coachNote: 'A picture every {sec} seconds while the coach is on, until you stop it (Ctrl+Alt+G, or my menu).',
+      coachOn: 'Coach on. I’ll look every {sec} seconds and tell you what I’d do. Ctrl+Alt+G stops me.',
+      coachOff: 'Coach off. Good game.',
+      coachBlack: 'I only see black. A game in exclusive fullscreen hides from screen capture: switch it to windowed or borderless fullscreen and I’ll see it.',
+      coachStopped: 'Coach stopped: {error}',
     },
     // reminders (reminders.js): "remind me in 20 minutes to take out the laundry"
     remind: {
@@ -1003,6 +1013,11 @@ export const LINES = {
       noVision: '{model} no sabe leer imágenes. gemma3 sí, en tu PC, y Gemini en línea también: cámbialo en mi menú › Modelo de IA.',
       noAI: 'Necesito una IA para mirar: clic derecho sobre mí › Modelo de IA.',
       failed: 'No pude mirar: {error}',
+      coachNote: 'Una imagen cada {sec} segundos mientras el coach esté activo, hasta que lo pares (Ctrl+Alt+G, o mi menú).',
+      coachOn: 'Coach activado. Miraré cada {sec} segundos y te diré qué haría yo. Ctrl+Alt+G me para.',
+      coachOff: 'Coach parado. Buena partida.',
+      coachBlack: 'Solo veo negro. Un juego en pantalla completa exclusiva se esconde de la captura: ponlo en ventana o en pantalla completa sin bordes y lo veré.',
+      coachStopped: 'Coach parado: {error}',
     },
     // recordatorios (reminders.js): «recuérdame en 20 minutos sacar la ropa»
     remind: {
@@ -1351,6 +1366,11 @@ export const LINES = {
       noVision: '{model} não sabe ler imagens. O gemma3 sabe, no seu PC, e o Gemini online também: troca no meu menu › Modelo de IA.',
       noAI: 'Preciso de uma IA pra olhar: clique direito em mim › Modelo de IA.',
       failed: 'Não consegui olhar: {error}',
+      coachNote: 'Uma imagem a cada {sec} segundos enquanto o coach estiver ligado, até você parar (Ctrl+Alt+G, ou meu menu).',
+      coachOn: 'Coach ligado. Vou olhar a cada {sec} segundos e te dizer o que eu faria. Ctrl+Alt+G me para.',
+      coachOff: 'Coach desligado. Boa partida.',
+      coachBlack: 'Só vejo preto. Um jogo em tela cheia exclusiva se esconde da captura de tela: coloque em janela ou tela cheia sem bordas e eu vou ver.',
+      coachStopped: 'Coach parado: {error}',
     },
     // lembretes (reminders.js): "me lembra daqui a 20 minutos de tirar a roupa"
     remind: {
@@ -1701,6 +1721,11 @@ export const LINES = {
       noVision: '{model} не умеет читать картинки. gemma3 умеет, на твоём ПК, и Gemini онлайн тоже: поменяй в моём меню › ИИ-модель.',
       noAI: 'Чтобы смотреть, мне нужен ИИ: правый клик по мне › ИИ-модель.',
       failed: 'Не получилось посмотреть: {error}',
+      coachNote: 'Картинка каждые {sec} секунд, пока коуч включён, пока ты его не остановишь (Ctrl+Alt+G или моё меню).',
+      coachOn: 'Коуч включён. Буду смотреть каждые {sec} секунд и говорить, что бы я сделала. Ctrl+Alt+G меня останавливает.',
+      coachOff: 'Коуч выключен. Удачной игры.',
+      coachBlack: 'Вижу только чёрное. Игра в эксклюзивном полноэкранном режиме прячется от захвата экрана: переключи её на оконный или полноэкранный режим без рамки, и я увижу.',
+      coachStopped: 'Коуч остановлен: {error}',
     },
     // напоминания (reminders.js): «напомни через 20 минут снять бельё»
     remind: {
